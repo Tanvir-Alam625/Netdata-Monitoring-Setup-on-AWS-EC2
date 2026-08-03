@@ -3,19 +3,19 @@
 ## Architecture
 
 ```text
-Parent EC2 (10.0.8.78)
-┌──────────────────────────────┐
-│ Netdata Parent               │
-│ Dashboard :19999             │
-│ Receives streamed metrics    │
-└──────────────▲───────────────┘
+Parent EC2 (<PARENT_PRIVATE_IP>)
+┌──────────────────────────────────┐
+│ Netdata Parent                   │
+│ Dashboard :<PARENT_NETDATA_PORT> │
+│ Receives streamed metrics        │
+└──────────────▲───────────────────┘
                │ Stream
                │
-┌──────────────┴───────────────┐
-│ Child EC2 (10.0.11.212)      │
-│ Netdata Agent                │
-│ Sends metrics to parent      │
-└──────────────────────────────┘
+┌──────────────┴─────────────────┐
+│ Child EC2 (<CHILD_PRIVATE_IP>) │
+│ Netdata Agent                  │
+│ Sends metrics to parent        │
+└────────────────────────────────┘
 ```
 
 ## Prerequisites
@@ -25,7 +25,7 @@ Parent EC2 (10.0.8.78)
 - Same VPC
 - Security Groups:
   - TCP 22 (SSH)
-  - TCP 19999 between parent and child (or VPC CIDR)
+  - TCP <PARENT_NETDATA_PORT> between parent and child (or VPC CIDR)
 - Outbound: All traffic
 
 ---
@@ -63,7 +63,7 @@ sudo ss -tulpn | grep 19999
 Open:
 
 ```
-http://<PUBLIC-IP>:19999
+http://<PUBLIC_IP>:<PARENT_NETDATA_PORT>
 ```
 
 ---
@@ -79,7 +79,7 @@ uuidgen
 Example:
 
 ```
-2c5b52d0-fc18-4b2d-99c3-9f82d67f4f31
+<PARENT_NETDATA_SESSION_ID>
 ```
 
 Edit:
@@ -89,9 +89,9 @@ sudo nano /etc/netdata/stream.conf
 ```
 
 ```ini
-[2c5b52d0-fc18-4b2d-99c3-9f82d67f4f31]
+[<PARENT_NETDATA_SESSION_ID>]
     enabled = yes
-    allow from = 10.0.0.0/16
+    allow from = <VPC_CIDR>
     default history = 3600
 ```
 
@@ -112,8 +112,8 @@ sudo nano /etc/netdata/stream.conf
 ```ini
 [stream]
     enabled = yes
-    destination = 10.0.8.78:19999
-    api key = 2c5b52d0-fc18-4b2d-99c3-9f82d67f4f31
+    destination = <PARENT_PRIVATE_IP>:<PARENT_NETDATA_PORT>
+    api key = <PARENT_NETDATA_SESSION_ID>
 ```
 
 Restart:
@@ -135,7 +135,7 @@ sudo journalctl -u netdata -f
 Expected:
 
 ```
-STREAM RCV 'ip-10-0-11-212'
+STREAM RCV 
 ```
 
 Child:
