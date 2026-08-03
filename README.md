@@ -39,6 +39,7 @@ sudo apt upgrade -y
 wget -O /tmp/netdata-kickstart.sh https://get.netdata.cloud/kickstart.sh
 chmod +x /tmp/netdata-kickstart.sh
 sudo /tmp/netdata-kickstart.sh
+rm /tmp/netdata-kickstart.sh
 
 sudo systemctl enable netdata
 sudo systemctl restart netdata
